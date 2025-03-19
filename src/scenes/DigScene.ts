@@ -1,16 +1,21 @@
 /**
  * @TODO DigScene
- * 0. Draw player tool
- * 1. Change dig action to work on the tile the player is colliding with and facing
- *
+ * 1. Consider making tile size bigger or player smaller
+ * 2. Add time (and animation) to break dirt
+ * 3. Make full screen
+ * 4. Pan with camera
  */
 
+const ABOVE_GROUND_HEIGHT = 80;
+const ABOVE_GROUND_POSITION_Y = 0;
+const SKY_COLOUR_ACTIVE = '#87CEEB';
+const SKY_COLOUR_MUTED = '#4A4A4A';
 const PLAYER_SPEED = 200;
 const PLAYER_START_TILE_X = 5;
 const PLAYER_START_TILE_Y = 5;
-const PLAYER_TOOL_OFFSET = 16;
-const TILE_MAP_WIDTH = 16;
-const TILE_MAP_HEIGHT = 16;
+const PLAYER_TOOL_OFFSET = 18;
+const TILE_MAP_WIDTH = 32;
+const TILE_MAP_HEIGHT = 20;
 const TILE_WIDTH = 32;
 const TILE_HEIGHT = 32;
 
@@ -62,7 +67,7 @@ export class DigScene extends Phaser.Scene {
       PLAYER_START_TILE_Y * TILE_HEIGHT,
       'player'
     );
-    this.player.setCollideWorldBounds(true);
+
     this.physics.add.collider(this.player, groundLayer);
 
     this.playerTool = this.add.container(0, 0);
@@ -78,6 +83,10 @@ export class DigScene extends Phaser.Scene {
     groundLayer.putTileAt(1, PLAYER_START_TILE_X - 1, PLAYER_START_TILE_Y + 1);
     groundLayer.putTileAt(1, PLAYER_START_TILE_X, PLAYER_START_TILE_Y + 1);
     groundLayer.putTileAt(1, PLAYER_START_TILE_X + 1, PLAYER_START_TILE_Y + 1);
+
+    // Configure the camera
+    this.cameras.main.setScroll(0, -ABOVE_GROUND_HEIGHT);
+    this.cameras.main.setBackgroundColor(SKY_COLOUR_MUTED);
 
     this.add
       .text(400, 32, 'Dig Scene', {
@@ -121,7 +130,6 @@ export class DigScene extends Phaser.Scene {
 
     // Player action
     if (Phaser.Input.Keyboard.JustDown(this.cursors.space)) {
-      console.log('[CPM] Space', this.playerTool); // @DEBUG
       const toolTileX = Math.floor(this.playerTool.x / TILE_WIDTH);
       const toolTileY = Math.floor(this.playerTool.y / TILE_HEIGHT);
 
@@ -131,16 +139,19 @@ export class DigScene extends Phaser.Scene {
         false,
         'ground'
       );
-      console.log(
-        '[CPM] toolTileX: ',
-        toolTileX,
-        'toolTileY: ',
-        toolTileY,
-        groundTile
-      ); // @DEBUG
       if (groundTile && groundTile.index === 0) {
-        this.map.putTileAt(1, toolTileX, toolTileY, false, 'ground');
+        this.map.putTileAt(1, toolTileX, toolTileY, true, 'ground');
       }
     }
+
+    // Change the sky colour if the player comes above-ground
+    const backgroundColour = isAboveGround(this.player)
+      ? SKY_COLOUR_ACTIVE
+      : SKY_COLOUR_MUTED;
+    this.cameras.main.setBackgroundColor(backgroundColour);
   }
+}
+
+function isAboveGround(gameObject: Phaser.GameObjects.Components.Transform) {
+  return gameObject.y < ABOVE_GROUND_POSITION_Y;
 }
