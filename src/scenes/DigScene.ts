@@ -4,6 +4,7 @@
  * 2. Add time (and animation) to break dirt
  * 3. Make full screen
  * 4. Pan with camera
+ * 6. Bug: Player placing dirt on partially occupied tile allows the player to break out of bounds
  */
 
 const ABOVE_GROUND_HEIGHT = 80;
@@ -11,9 +12,9 @@ const ABOVE_GROUND_POSITION_Y = 0;
 const SKY_COLOUR_ACTIVE = '#87CEEB';
 const SKY_COLOUR_MUTED = '#4A4A4A';
 const PLAYER_SPEED = 200;
-const PLAYER_START_TILE_X = 5;
-const PLAYER_START_TILE_Y = 5;
-const PLAYER_TOOL_OFFSET = 18;
+const PLAYER_START_TILE_X = 12;
+const PLAYER_START_TILE_Y = 7;
+const PLAYER_TOOL_OFFSET = 32;
 const TILE_MAP_WIDTH = 32;
 const TILE_MAP_HEIGHT = 20;
 const TILE_WIDTH = 32;
@@ -72,6 +73,10 @@ export class DigScene extends Phaser.Scene {
 
     this.playerTool = this.add.container(0, 0);
     this.playerTool.setPosition(PLAYER_TOOL_OFFSET, 0);
+    const playerToolSprite = this.add.graphics();
+    playerToolSprite.lineStyle(1, 0xffffff);
+    playerToolSprite.strokeCircle(0, 0, 1);
+    this.playerTool.add(playerToolSprite);
 
     // Surround the player with a dug area
     groundLayer.putTileAt(1, PLAYER_START_TILE_X - 1, PLAYER_START_TILE_Y - 1);
@@ -130,6 +135,7 @@ export class DigScene extends Phaser.Scene {
 
     // Player action
     if (Phaser.Input.Keyboard.JustDown(this.cursors.space)) {
+      // Can we replace this with this.map.getTileAtWorldXY?
       const toolTileX = Math.floor(this.playerTool.x / TILE_WIDTH);
       const toolTileY = Math.floor(this.playerTool.y / TILE_HEIGHT);
 
@@ -144,6 +150,34 @@ export class DigScene extends Phaser.Scene {
       }
     }
 
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.shift)) {
+      const toolTile = this.map.getTileAtWorldXY(
+        this.playerTool.x,
+        this.playerTool.y,
+        undefined,
+        undefined,
+        'ground'
+      );
+
+      if (toolTile) {
+        const playerBounds = this.player.getBounds();
+        const tileBounds = new Phaser.Geom.Rectangle(
+          toolTile.getLeft(),
+          toolTile.getTop(),
+          toolTile.width,
+          toolTile.height
+        );
+        const playerOverlapsTile = Phaser.Geom.Rectangle.Overlaps(
+          playerBounds,
+          tileBounds
+        );
+
+        if (toolTile.index === 1 && !playerOverlapsTile) {
+          this.map.putTileAt(0, toolTile.x, toolTile.y, true);
+        }
+      }
+    }
+
     // Change the sky colour if the player comes above-ground
     const backgroundColour = isAboveGround(this.player)
       ? SKY_COLOUR_ACTIVE
@@ -152,6 +186,11 @@ export class DigScene extends Phaser.Scene {
   }
 }
 
+/**
+ * Checks if a gameObject is in the above-ground space.
+ * @param gameObject The game object to check.
+ * @returns True if the gameObject is above ground, else false.
+ */
 function isAboveGround(gameObject: Phaser.GameObjects.Components.Transform) {
   return gameObject.y < ABOVE_GROUND_POSITION_Y;
 }
