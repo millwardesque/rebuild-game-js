@@ -6,25 +6,22 @@
  * - Bug: Player placing dirt on partially occupied tile allows the player to break out of bounds
  *
  * From Ziya:
- * - Start above ground
+ * - Show current action snapped to tile (e.g. dirt, ladder, or ground centered on tile)
+ * - Player action is always space
  * - Monsters above ground
  * - Game sprite
  * - Health bar
- * - Ladder gr
- * - Press down to go below ground
- * - Press up to climb ladder
  */
 
 const ABOVE_GROUND_GRAVITY = 800;
-const ABOVE_GROUND_HEIGHT = 80;
 const ABOVE_GROUND_POSITION_Y = 0;
+const CAMERA_Y_OFFSET = -80;
 const SKY_COLOUR_ACTIVE = '#87CEEB';
 const SKY_COLOUR_MUTED = '#4A4A4A';
 const PLAYER_HORIZONTAL_DRAG = 0.85;
 const PLAYER_JUMP_VELOCITY = -200;
 const PLAYER_SPEED = 200;
 const PLAYER_START_TILE_X = 12;
-const PLAYER_START_TILE_Y = 7;
 const PLAYER_TOOL_OFFSET = 24;
 const TILE_MAP_WIDTH = 32;
 const TILE_MAP_HEIGHT = 20;
@@ -44,6 +41,7 @@ export class DigScene extends Phaser.Scene {
   preload() {
     this.load.image('dirt', '/src/assets/wip-dirt.png');
     this.load.image('player', '/src/assets/wip-player.png');
+    this.load.image('ladder', '/src/assets/wip-ladder.png');
   }
 
   create() {
@@ -76,10 +74,12 @@ export class DigScene extends Phaser.Scene {
     // Create the player
     this.player = this.physics.add.sprite(
       PLAYER_START_TILE_X * TILE_WIDTH,
-      PLAYER_START_TILE_Y * TILE_HEIGHT,
+      ABOVE_GROUND_POSITION_Y,
       'player'
     );
+    this.player.y -= this.player.height / 2;
     this.player.setBounce(0);
+    this.player.setDepth(1);
     this.physics.add.collider(this.player, groundLayer);
 
     this.playerTool = this.add.container(0, 0);
@@ -89,23 +89,12 @@ export class DigScene extends Phaser.Scene {
     playerToolSprite.strokeCircle(0, 0, 1);
     this.playerTool.add(playerToolSprite);
 
-    // Surround the player with a dug area
-    groundLayer.putTileAt(1, PLAYER_START_TILE_X - 1, PLAYER_START_TILE_Y - 1);
-    groundLayer.putTileAt(1, PLAYER_START_TILE_X, PLAYER_START_TILE_Y - 1);
-    groundLayer.putTileAt(1, PLAYER_START_TILE_X + 1, PLAYER_START_TILE_Y - 1);
-    groundLayer.putTileAt(1, PLAYER_START_TILE_X - 1, PLAYER_START_TILE_Y);
-    groundLayer.putTileAt(1, PLAYER_START_TILE_X, PLAYER_START_TILE_Y);
-    groundLayer.putTileAt(1, PLAYER_START_TILE_X + 1, PLAYER_START_TILE_Y);
-    groundLayer.putTileAt(1, PLAYER_START_TILE_X - 1, PLAYER_START_TILE_Y + 1);
-    groundLayer.putTileAt(1, PLAYER_START_TILE_X, PLAYER_START_TILE_Y + 1);
-    groundLayer.putTileAt(1, PLAYER_START_TILE_X + 1, PLAYER_START_TILE_Y + 1);
-
     // Configure the camera
-    this.cameras.main.setScroll(0, -ABOVE_GROUND_HEIGHT);
+    this.cameras.main.setScroll(0, CAMERA_Y_OFFSET);
     this.cameras.main.setBackgroundColor(SKY_COLOUR_MUTED);
 
     this.add
-      .text(400, 32, 'Dig Scene', {
+      .text(400, -48, 'Dig Scene', {
         color: '#ffffff',
         fontSize: '32px',
       })
@@ -129,6 +118,25 @@ export class DigScene extends Phaser.Scene {
         this.player.setVelocityX(
           (this.player.body?.velocity.x ?? 0) * PLAYER_HORIZONTAL_DRAG
         );
+      }
+
+      if (this.cursors.space.isDown && this.player.body?.blocked.down) {
+        const playerTileX = Math.floor(this.player.getCenter().x / TILE_WIDTH);
+        const playerTileY = 0; // TODO This is a lazy assumption the 0th tile row is always at the above-ground level, but it'll work for now
+        const groundTile = this.map.getTileAt(
+          playerTileX,
+          playerTileY,
+          false,
+          'ground'
+        );
+        if (groundTile && groundTile.index === 0) {
+          this.map.putTileAt(1, playerTileX, playerTileY, true, 'ground');
+          this.add.sprite(
+            playerTileX * TILE_WIDTH + TILE_WIDTH / 2,
+            playerTileY * TILE_HEIGHT + TILE_HEIGHT / 2,
+            'ladder'
+          );
+        }
       }
 
       if (this.cursors.up.isDown && this.player.body?.blocked.down) {
@@ -183,6 +191,14 @@ export class DigScene extends Phaser.Scene {
         );
         if (groundTile && groundTile.index === 0) {
           this.map.putTileAt(1, toolTileX, toolTileY, true, 'ground');
+
+          if (toolTileY === 0) {
+            this.add.sprite(
+              toolTileX * TILE_WIDTH + TILE_WIDTH / 2,
+              toolTileY * TILE_HEIGHT + TILE_HEIGHT / 2,
+              'ladder'
+            );
+          }
         }
       }
 
