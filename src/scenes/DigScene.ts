@@ -4,6 +4,8 @@
  * - Add time (and animation) to break dirt
  * - Pan with camera
  * - Bug: Player placing dirt on partially occupied tile allows the player to break out of bounds
+ * - Bug: Putting dirt on top layer of tiles doens't erase the ladder
+ * - Bug: Can dig diagonally even if tile is surrounded by other dirt tiles
  *
  * From Ziya:
  * - Show current action snapped to tile (e.g. dirt, ladder, or ground centered on tile)
@@ -172,9 +174,11 @@ export class DigScene extends Phaser.Scene {
       }
 
       const toolX =
-        this.player.x + Math.cos(this.player.rotation) * PLAYER_TOOL_OFFSET;
+        this.player.getCenter().x +
+        Math.cos(this.player.rotation) * PLAYER_TOOL_OFFSET;
       const toolY =
-        this.player.y + Math.sin(this.player.rotation) * PLAYER_TOOL_OFFSET;
+        this.player.getCenter().y +
+        Math.sin(this.player.rotation) * PLAYER_TOOL_OFFSET;
       this.playerTool.setPosition(toolX, toolY);
 
       // Player action
