@@ -1,6 +1,6 @@
 /**
  * @TODO DigScene
- * - Change player sprite above-ground, and use flip for left / right
+ * - Change player sprite below-ground to be top-down
  * - Add time (and animation) to break dirt
  * - Bug: Player placing dirt on partially occupied tile allows the player to break out of bounds
  * - Bug: Putting dirt on top layer of tiles doens't erase the ladder
@@ -12,7 +12,6 @@
  *
  * From Ziya:
  * - Monsters above ground
- * - Player sprite
  * - Health bar
  * - Show weapon / tool
  */
