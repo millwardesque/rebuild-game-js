@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { isAboveGround } from '../utils';
 import { ABOVE_GROUND_GRAVITY } from '../constants';
 
-const PLAYER_HORIZONTAL_DRAG = 0.85;
+const PLAYER_HORIZONTAL_DRAG = 0.8;
 const PLAYER_JUMP_VELOCITY = -200;
 const PLAYER_SPEED = 200;
 const PLAYER_TOOL_OFFSET = 24;
@@ -11,23 +11,39 @@ const PLAYER_DEPTH = 1;
 export class Player extends Phaser.Physics.Arcade.Sprite {
   private playerTool: Phaser.GameObjects.Container;
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
+  private spriteKey: string;
+  private leftWalkKey: string;
+  private rightWalkKey: string;
+  private upWalkKey: string;
+  private downWalkKey: string;
+
+  private facingAngle: number = 0;
 
   constructor(
     scene: Phaser.Scene,
     x: number,
     y: number,
     cursors: Phaser.Types.Input.Keyboard.CursorKeys,
-    sprite: string | Phaser.Textures.Texture
+    sprite: string
   ) {
     super(scene, x, y, sprite);
+    this.setScale(2);
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
     this.cursors = cursors;
+    this.spriteKey = sprite;
+    this.leftWalkKey = `${this.spriteKey}-walk-left`;
+    this.rightWalkKey = `${this.spriteKey}-walk-right`;
+    this.upWalkKey = `${this.spriteKey}-walk-up`;
+    this.downWalkKey = `${this.spriteKey}-walk-down`;
 
     this.setBounce(0);
     this.setDepth(PLAYER_DEPTH);
+
+    // Create animations
+    this.createAnimations();
 
     this.playerTool = scene.add.container(0, 0);
     this.playerTool.setPosition(PLAYER_TOOL_OFFSET, 0);
@@ -35,6 +51,55 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     playerToolSprite.lineStyle(1, 0xffffff);
     playerToolSprite.strokeCircle(0, 0, 1);
     this.playerTool.add(playerToolSprite);
+  }
+
+  /**
+   * Creates the player animations
+   */
+  private createAnimations(): void {
+    if (!this.scene.anims.exists(this.downWalkKey)) {
+      this.scene.anims.create({
+        key: this.downWalkKey,
+        frames: this.scene.anims.generateFrameNumbers(this.spriteKey, {
+          frames: [0, 4, 8],
+        }),
+        frameRate: 8,
+        repeat: -1,
+      });
+    }
+
+    if (!this.scene.anims.exists(this.leftWalkKey)) {
+      this.scene.anims.create({
+        key: this.leftWalkKey,
+        frames: this.scene.anims.generateFrameNumbers(this.spriteKey, {
+          frames: [1, 5, 9],
+        }),
+        frameRate: 8,
+        repeat: -1,
+      });
+    }
+
+    if (!this.scene.anims.exists(this.rightWalkKey)) {
+      this.scene.anims.create({
+        key: this.rightWalkKey,
+        frames: this.scene.anims.generateFrameNumbers(this.spriteKey, {
+          frames: [2, 6, 10],
+        }),
+        frameRate: 8,
+        repeat: -1,
+      });
+    }
+
+    if (!this.scene.anims.exists(this.upWalkKey)) {
+      this.scene.anims.create({
+        key: this.upWalkKey,
+        frames: this.scene.anims.generateFrameNumbers(this.spriteKey, {
+          frames: [3, 7, 11],
+        }),
+        frameRate: 8,
+        repeat: -1,
+      });
+    }
   }
 
   /**
@@ -61,12 +126,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     if (this.cursors.left.isDown) {
       this.setVelocityX(-PLAYER_SPEED);
-      this.setAngle(180);
+      this.play(this.leftWalkKey, true);
+      this.facingAngle = 180;
     } else if (this.cursors.right.isDown) {
       this.setVelocityX(PLAYER_SPEED);
-      this.setAngle(0);
+      this.play(this.rightWalkKey, true);
+      this.facingAngle = 0;
     } else {
       this.setVelocityX((this.body?.velocity.x ?? 0) * PLAYER_HORIZONTAL_DRAG);
+      this.stopAfterRepeat(0);
     }
 
     if (this.cursors.up.isDown && this.body?.blocked.down) {
@@ -98,11 +166,22 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     if (dx !== 0 || dy !== 0) {
-      const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-      this.setAngle(angle);
+      this.facingAngle = Math.atan2(dy, dx) * (180 / Math.PI);
 
       this.setVelocityX(PLAYER_SPEED * dx);
       this.setVelocityY(PLAYER_SPEED * dy);
+
+      if (dx > 0) {
+        this.play(this.rightWalkKey, true);
+      } else if (dx < 0) {
+        this.play(this.leftWalkKey, true);
+      } else if (dy > 0) {
+        this.play(this.downWalkKey, true);
+      } else if (dy < 0) {
+        this.play(this.upWalkKey, true);
+      }
+    } else {
+      this.stopAfterRepeat(0);
     }
   }
 
@@ -118,10 +197,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
    * the player's position
    */
   updateToolPosition(): void {
+    const angleInRadians = this.facingAngle * (Math.PI / 180);
     const toolX =
-      this.getCenter().x + Math.cos(this.rotation) * PLAYER_TOOL_OFFSET;
+      this.getCenter().x + Math.cos(angleInRadians) * PLAYER_TOOL_OFFSET;
     const toolY =
-      this.getCenter().y + Math.sin(this.rotation) * PLAYER_TOOL_OFFSET;
+      this.getCenter().y + Math.sin(angleInRadians) * PLAYER_TOOL_OFFSET;
     this.playerTool.setPosition(toolX, toolY);
   }
 }
