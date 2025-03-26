@@ -7,6 +7,7 @@ const PLAYER_JUMP_VELOCITY = -200;
 const PLAYER_SPEED = 200;
 const PLAYER_TOOL_OFFSET = 24;
 const PLAYER_DEPTH = 1;
+const PLAYER_SCALE = 1.5; // Scale of player sprite. Ideally this should be 1.0, but since I'm not yet making custom pixel art, this lets us fudge it.
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   private playerTool: Phaser.GameObjects.Container;
@@ -27,7 +28,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     sprite: string
   ) {
     super(scene, x, y, sprite);
-    this.setScale(2);
+    this.setScale(PLAYER_SCALE);
 
     scene.add.existing(this);
     scene.physics.add.existing(this);

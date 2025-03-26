@@ -30,8 +30,8 @@ const TILE_MAP_HEIGHT = 32;
 const TILE_WIDTH = 32;
 const TILE_HEIGHT = 32;
 const PLAYER_START_TILE_X = Math.floor(TILE_MAP_WIDTH / 2.0);
-const PLAYER_SPRITE_WIDTH = 16;
-const PLAYER_SPRITE_HEIGHT = 16;
+const PLAYER_SPRITESHEET_WIDTH = 16;
+const PLAYER_SPRITESHEET_HEIGHT = 16;
 
 export class DigScene extends Phaser.Scene {
   private player!: Player;
@@ -45,8 +45,8 @@ export class DigScene extends Phaser.Scene {
   preload() {
     this.load.image('dirt', '/src/assets/wip-dirt.png');
     this.load.spritesheet('player', '/src/assets/wip-player.png', {
-      frameWidth: PLAYER_SPRITE_WIDTH,
-      frameHeight: PLAYER_SPRITE_HEIGHT,
+      frameWidth: PLAYER_SPRITESHEET_WIDTH,
+      frameHeight: PLAYER_SPRITESHEET_HEIGHT,
     });
     this.load.image('ladder', '/src/assets/wip-ladder.png');
   }
