@@ -11,14 +11,14 @@
  * - Player action is always space
  *
  * From Ziya:
- * - Monsters above ground
- * - Health bar
+ * - Health bar and monster damage
  * - Show weapon / tool
  */
 
 import { ABOVE_GROUND_POSITION_Y } from '../constants';
 import { isAboveGround } from '../utils';
 import { Player } from '../entities/player';
+import { Zombie } from '../entities/zombie';
 
 const CAMERA_DEADZONE_X = 200;
 const CAMERA_DEADZONE_Y = 50;
@@ -86,9 +86,28 @@ export class DigScene extends Phaser.Scene {
       'player'
     );
     // Shift the player up by half its height to align with the above-ground position
-    this.player.y -= this.player.height / 2;
-
+    this.player.y -= (this.player.scaleY * this.player.height) / 2;
     this.physics.add.collider(this.player, groundLayer);
+
+    const zombie = new Zombie(
+      this,
+      (PLAYER_START_TILE_X - 20) * TILE_WIDTH,
+      ABOVE_GROUND_POSITION_Y,
+      'player',
+      this.player
+    );
+    zombie.y -= (zombie.scaleY * zombie.height) / 2;
+    this.physics.add.collider(zombie, groundLayer);
+
+    const zombie2 = new Zombie(
+      this,
+      (PLAYER_START_TILE_X + 20) * TILE_WIDTH,
+      ABOVE_GROUND_POSITION_Y,
+      'player',
+      this.player
+    );
+    zombie2.y -= (zombie2.scaleY * zombie2.height) / 2;
+    this.physics.add.collider(zombie2, groundLayer);
 
     // Configure the camera
     this.cameras.main.setBackgroundColor(SKY_COLOUR_MUTED);
