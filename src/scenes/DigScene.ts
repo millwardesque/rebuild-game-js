@@ -15,24 +15,23 @@
  * - Health bar
  */
 
-const ABOVE_GROUND_GRAVITY = 800;
+import { isAboveGround } from '../utils';
+import { Player } from '../entities/player';
+
 const ABOVE_GROUND_POSITION_Y = 0;
+const CAMERA_DEADZONE_X = 200;
+const CAMERA_DEADZONE_Y = 50;
 const CAMERA_Y_OFFSET = -80;
 const SKY_COLOUR_ACTIVE = '#87CEEB';
 const SKY_COLOUR_MUTED = '#4A4A4A';
-const PLAYER_HORIZONTAL_DRAG = 0.85;
-const PLAYER_JUMP_VELOCITY = -200;
-const PLAYER_SPEED = 200;
 const PLAYER_START_TILE_X = 12;
-const PLAYER_TOOL_OFFSET = 24;
 const TILE_MAP_WIDTH = 32;
 const TILE_MAP_HEIGHT = 20;
 const TILE_WIDTH = 32;
 const TILE_HEIGHT = 32;
 
 export class DigScene extends Phaser.Scene {
-  private player!: Phaser.Physics.Arcade.Sprite;
-  private playerTool!: Phaser.GameObjects.Container;
+  private player!: Player;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private map!: Phaser.Tilemaps.Tilemap;
 
@@ -74,26 +73,24 @@ export class DigScene extends Phaser.Scene {
     this.map.setCollision([0]);
 
     // Create the player
-    this.player = this.physics.add.sprite(
+    this.player = new Player(
+      this,
       PLAYER_START_TILE_X * TILE_WIDTH,
       ABOVE_GROUND_POSITION_Y,
+      this.cursors,
       'player'
     );
+    // Shift the player up by half its height to align with the above-ground position
     this.player.y -= this.player.height / 2;
-    this.player.setBounce(0);
-    this.player.setDepth(1);
-    this.physics.add.collider(this.player, groundLayer);
 
-    this.playerTool = this.add.container(0, 0);
-    this.playerTool.setPosition(PLAYER_TOOL_OFFSET, 0);
-    const playerToolSprite = this.add.graphics();
-    playerToolSprite.lineStyle(1, 0xffffff);
-    playerToolSprite.strokeCircle(0, 0, 1);
-    this.playerTool.add(playerToolSprite);
+    this.physics.add.collider(this.player, groundLayer);
 
     // Configure the camera
     this.cameras.main.setScroll(0, CAMERA_Y_OFFSET);
     this.cameras.main.setBackgroundColor(SKY_COLOUR_MUTED);
+
+    this.cameras.main.startFollow(this.player, true, 0.9, 0.9);
+    this.cameras.main.setDeadzone(CAMERA_DEADZONE_X, CAMERA_DEADZONE_Y);
 
     this.add
       .text(400, -48, 'Dig Scene', {
@@ -104,23 +101,12 @@ export class DigScene extends Phaser.Scene {
   }
 
   update() {
-    const aboveGround = isAboveGround(this.player);
+    const isPlayerAboveGround = isAboveGround(this.player);
 
-    if (aboveGround) {
-      this.player.setGravityY(ABOVE_GROUND_GRAVITY);
+    this.player.update();
+
+    if (isPlayerAboveGround) {
       this.cameras.main.setBackgroundColor(SKY_COLOUR_ACTIVE);
-
-      if (this.cursors.left.isDown) {
-        this.player.setVelocityX(-PLAYER_SPEED);
-        this.player.setAngle(180);
-      } else if (this.cursors.right.isDown) {
-        this.player.setVelocityX(PLAYER_SPEED);
-        this.player.setAngle(0);
-      } else {
-        this.player.setVelocityX(
-          (this.player.body?.velocity.x ?? 0) * PLAYER_HORIZONTAL_DRAG
-        );
-      }
 
       if (this.cursors.space.isDown && this.player.body?.blocked.down) {
         const playerTileX = Math.floor(this.player.getCenter().x / TILE_WIDTH);
@@ -140,52 +126,18 @@ export class DigScene extends Phaser.Scene {
           );
         }
       }
-
-      if (this.cursors.up.isDown && this.player.body?.blocked.down) {
-        this.player.setVelocityY(PLAYER_JUMP_VELOCITY);
-      }
     } else {
-      this.player.setGravityY(0);
       this.cameras.main.setBackgroundColor(SKY_COLOUR_MUTED);
-
-      // Player movement
-      this.player.setVelocity(0);
-
-      let dx = 0;
-      let dy = 0;
-      if (this.cursors.left.isDown) {
-        dx = -1;
-      } else if (this.cursors.right.isDown) {
-        dx = 1;
-      }
-
-      if (this.cursors.up.isDown) {
-        dy = -1;
-      } else if (this.cursors.down.isDown) {
-        dy = 1;
-      }
-
-      if (dx !== 0 || dy !== 0) {
-        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-        this.player.setAngle(angle);
-
-        this.player.setVelocityX(PLAYER_SPEED * dx);
-        this.player.setVelocityY(PLAYER_SPEED * dy);
-      }
-
-      const toolX =
-        this.player.getCenter().x +
-        Math.cos(this.player.rotation) * PLAYER_TOOL_OFFSET;
-      const toolY =
-        this.player.getCenter().y +
-        Math.sin(this.player.rotation) * PLAYER_TOOL_OFFSET;
-      this.playerTool.setPosition(toolX, toolY);
 
       // Player action
       if (Phaser.Input.Keyboard.JustDown(this.cursors.space)) {
         // Can we replace this with this.map.getTileAtWorldXY?
-        const toolTileX = Math.floor(this.playerTool.x / TILE_WIDTH);
-        const toolTileY = Math.floor(this.playerTool.y / TILE_HEIGHT);
+        const toolTileX = Math.floor(
+          this.player.getToolPosition().x / TILE_WIDTH
+        );
+        const toolTileY = Math.floor(
+          this.player.getToolPosition().y / TILE_HEIGHT
+        );
 
         const groundTile = this.map.getTileAt(
           toolTileX,
@@ -208,8 +160,8 @@ export class DigScene extends Phaser.Scene {
 
       if (Phaser.Input.Keyboard.JustDown(this.cursors.shift)) {
         const toolTile = this.map.getTileAtWorldXY(
-          this.playerTool.x,
-          this.playerTool.y,
+          this.player.getToolPosition().x,
+          this.player.getToolPosition().y,
           undefined,
           undefined,
           'ground'
@@ -235,13 +187,4 @@ export class DigScene extends Phaser.Scene {
       }
     }
   }
-}
-
-/**
- * Checks if a gameObject is in the above-ground space.
- * @param gameObject The game object to check.
- * @returns True if the gameObject is above ground, else false.
- */
-function isAboveGround(gameObject: Phaser.Physics.Arcade.Sprite) {
-  return gameObject.y + gameObject.height / 2 <= ABOVE_GROUND_POSITION_Y;
 }
