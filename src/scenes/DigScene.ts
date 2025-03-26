@@ -2,33 +2,34 @@
  * @TODO DigScene
  * - Change player sprite above-ground, and use flip for left / right
  * - Add time (and animation) to break dirt
- * - Pan with camera
  * - Bug: Player placing dirt on partially occupied tile allows the player to break out of bounds
  * - Bug: Putting dirt on top layer of tiles doens't erase the ladder
  * - Bug: Can dig diagonally even if tile is surrounded by other dirt tiles
- *
- * From Ziya:
+ * - Camera bounds on edges of tilemap
+ * - Unpassable player boundaries at edges of tilemap
  * - Show current action snapped to tile (e.g. dirt, ladder, or ground centered on tile)
  * - Player action is always space
+ *
+ * From Ziya:
  * - Monsters above ground
- * - Game sprite
+ * - Player sprite
  * - Health bar
+ * - Show weapon / tool
  */
 
+import { ABOVE_GROUND_POSITION_Y } from '../constants';
 import { isAboveGround } from '../utils';
 import { Player } from '../entities/player';
 
-const ABOVE_GROUND_POSITION_Y = 0;
 const CAMERA_DEADZONE_X = 200;
 const CAMERA_DEADZONE_Y = 50;
-const CAMERA_Y_OFFSET = -80;
 const SKY_COLOUR_ACTIVE = '#87CEEB';
 const SKY_COLOUR_MUTED = '#4A4A4A';
-const PLAYER_START_TILE_X = 12;
-const TILE_MAP_WIDTH = 32;
-const TILE_MAP_HEIGHT = 20;
+const TILE_MAP_WIDTH = 256;
+const TILE_MAP_HEIGHT = 32;
 const TILE_WIDTH = 32;
 const TILE_HEIGHT = 32;
+const PLAYER_START_TILE_X = Math.floor(TILE_MAP_WIDTH / 2.0);
 
 export class DigScene extends Phaser.Scene {
   private player!: Player;
@@ -86,7 +87,6 @@ export class DigScene extends Phaser.Scene {
     this.physics.add.collider(this.player, groundLayer);
 
     // Configure the camera
-    this.cameras.main.setScroll(0, CAMERA_Y_OFFSET);
     this.cameras.main.setBackgroundColor(SKY_COLOUR_MUTED);
 
     this.cameras.main.startFollow(this.player, true, 0.9, 0.9);
