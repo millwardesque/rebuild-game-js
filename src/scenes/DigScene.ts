@@ -1,20 +1,3 @@
-/**
- * @TODO DigScene
- * - Change player sprite below-ground to be top-down
- * - Add time (and animation) to break dirt
- * - Bug: Player placing dirt on partially occupied tile allows the player to break out of bounds
- * - Bug: Putting dirt on top layer of tiles doens't erase the ladder
- * - Bug: Can dig diagonally even if tile is surrounded by other dirt tiles
- * - Camera bounds on edges of tilemap
- * - Unpassable player boundaries at edges of tilemap
- * - Show current action snapped to tile (e.g. dirt, ladder, or ground centered on tile)
- * - Player action is always space
- *
- * From Ziya:
- * - Health bar and monster damage
- * - Show weapon / tool
- */
-
 import { ABOVE_GROUND_POSITION_Y } from '../constants';
 import { isAboveGround } from '../utils';
 import { Player } from '../entities/player';
