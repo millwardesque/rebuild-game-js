@@ -8,6 +8,7 @@ const PLAYER_SPEED = 200;
 const PLAYER_TOOL_OFFSET = 24;
 const PLAYER_DEPTH = 1;
 const PLAYER_SCALE = 1.5; // Scale of player sprite. Ideally this should be 1.0, but since I'm not yet making custom pixel art, this lets us fudge it.
+const PLAYER_MAX_HEALTH = 100;
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   private playerTool: Phaser.GameObjects.Container;
@@ -19,6 +20,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private downWalkKey: string;
 
   private facingAngle: number = 0;
+
+  // Health properties
+  private maxHealth: number = PLAYER_MAX_HEALTH;
+  private currentHealth: number = PLAYER_MAX_HEALTH;
+  private onHealthChange: ((health: number, maxHealth: number) => void) | null =
+    null;
 
   constructor(
     scene: Phaser.Scene,
@@ -204,5 +211,60 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const toolY =
       this.getCenter().y + Math.sin(angleInRadians) * PLAYER_TOOL_OFFSET;
     this.playerTool.setPosition(toolX, toolY);
+  }
+
+  /**
+   * Get the current health of the player
+   * @returns Current health value
+   */
+  getHealth(): number {
+    return this.currentHealth;
+  }
+
+  /**
+   * Get the maximum health of the player
+   * @returns Maximum health value
+   */
+  getMaxHealth(): number {
+    return this.maxHealth;
+  }
+
+  /**
+   * Set callback for when health changes
+   * @param callback Function to call when health changes
+   */
+  setHealthChangeListener(
+    callback: (health: number, maxHealth: number) => void
+  ): void {
+    this.onHealthChange = callback;
+  }
+
+  /**
+   * Private helper function to change the health and call the onHealthChange callback
+   * @param newHealth New health value
+   */
+  private changeHealth(newHealth: number): void {
+    this.currentHealth = newHealth;
+    if (this.onHealthChange) {
+      this.onHealthChange(this.currentHealth, this.maxHealth);
+    }
+  }
+
+  /**
+   * Take damage and reduce player health
+   * @param amount Amount of damage to take
+   * @returns Whether the player is still alive
+   */
+  takeDamage(amount: number): boolean {
+    this.changeHealth(Math.max(0, this.currentHealth - amount));
+    return this.currentHealth > 0;
+  }
+
+  /**
+   * Heal the player
+   * @param amount Amount to heal
+   */
+  heal(amount: number): void {
+    this.changeHealth(Math.min(this.maxHealth, this.currentHealth + amount));
   }
 }

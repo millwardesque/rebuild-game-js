@@ -19,6 +19,7 @@ import { ABOVE_GROUND_POSITION_Y } from '../constants';
 import { isAboveGround } from '../utils';
 import { Player } from '../entities/player';
 import { Zombie } from '../entities/zombie';
+import { HealthBar } from '../entities/healthbar';
 
 const CAMERA_DEADZONE_X = 200;
 const CAMERA_DEADZONE_Y = 50;
@@ -36,6 +37,8 @@ export class DigScene extends Phaser.Scene {
   private player!: Player;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private map!: Phaser.Tilemaps.Tilemap;
+  private healthBar!: HealthBar;
+  private zombies: Zombie[] = [];
 
   constructor() {
     super({ key: 'DigScene' });
@@ -89,6 +92,7 @@ export class DigScene extends Phaser.Scene {
     this.player.y -= (this.player.scaleY * this.player.height) / 2;
     this.physics.add.collider(this.player, groundLayer);
 
+    // Create zombies
     const zombie = new Zombie(
       this,
       (PLAYER_START_TILE_X - 20) * TILE_WIDTH,
@@ -98,6 +102,7 @@ export class DigScene extends Phaser.Scene {
     );
     zombie.y -= (zombie.scaleY * zombie.height) / 2;
     this.physics.add.collider(zombie, groundLayer);
+    this.zombies.push(zombie);
 
     const zombie2 = new Zombie(
       this,
@@ -108,12 +113,32 @@ export class DigScene extends Phaser.Scene {
     );
     zombie2.y -= (zombie2.scaleY * zombie2.height) / 2;
     this.physics.add.collider(zombie2, groundLayer);
+    this.zombies.push(zombie2);
+
+    // Add collisions between player and zombies
+    this.physics.add.overlap(
+      this.player,
+      this.zombies,
+      this.handlePlayerZombieCollision,
+      undefined,
+      this
+    );
 
     // Configure the camera
     this.cameras.main.setBackgroundColor(SKY_COLOUR_MUTED);
-
     this.cameras.main.startFollow(this.player, true, 0.9, 0.9);
     this.cameras.main.setDeadzone(CAMERA_DEADZONE_X, CAMERA_DEADZONE_Y);
+
+    this.healthBar = new HealthBar(this, 5, 5);
+    this.healthBar.updateHealthBar(
+      this.player.getHealth(),
+      this.player.getMaxHealth()
+    );
+
+    // Setup player health change listener
+    this.player.setHealthChangeListener((health, maxHealth) => {
+      this.healthBar.updateHealthBar(health, maxHealth);
+    });
 
     this.add
       .text(400, -48, 'Dig Scene', {
@@ -208,6 +233,50 @@ export class DigScene extends Phaser.Scene {
           }
         }
       }
+    }
+  }
+
+  /**
+   * Handles collision between player and zombies
+   */
+  private handlePlayerZombieCollision(
+    _player:
+      | Phaser.GameObjects.GameObject
+      | Phaser.Physics.Arcade.Body
+      | Phaser.Physics.Arcade.StaticBody
+      | Phaser.Tilemaps.Tile,
+    _zombie:
+      | Phaser.GameObjects.GameObject
+      | Phaser.Physics.Arcade.Body
+      | Phaser.Physics.Arcade.StaticBody
+      | Phaser.Tilemaps.Tile
+  ): void {
+    // Since we're using overlap with Player and Zombie instances, we can safely cast them
+    const player = _player as unknown as Player;
+    const zombie = _zombie as unknown as Zombie;
+
+    // Only apply damage every second to prevent rapid damage
+    const now = this.time.now;
+    if (
+      !zombie.getData('lastDamageTime') ||
+      now - zombie.getData('lastDamageTime') > 1000
+    ) {
+      // Apply damage to player
+      player.takeDamage(10);
+
+      // Set the last damage time
+      zombie.setData('lastDamageTime', now);
+
+      // Flash the player red to indicate damage
+      this.tweens.add({
+        targets: player,
+        tint: 0xff0000,
+        duration: 100,
+        yoyo: true,
+        onComplete: () => {
+          player.clearTint();
+        },
+      });
     }
   }
 }
