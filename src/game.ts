@@ -1,5 +1,6 @@
 import 'phaser';
 import { DigScene } from './scenes/DigScene';
+import { GameOverScene } from './scenes/GameOverScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -8,7 +9,7 @@ const config: Phaser.Types.Core.GameConfig = {
   parent: 'game',
   backgroundColor: '#000000',
   pixelArt: true,
-  scene: DigScene,
+  scene: [DigScene, GameOverScene],
   physics: {
     default: 'arcade',
     arcade: {

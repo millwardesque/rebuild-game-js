@@ -27,6 +27,10 @@ export class DigScene extends Phaser.Scene {
     super({ key: 'DigScene' });
   }
 
+  restart() {
+    this.scene.restart();
+  }
+
   preload() {
     this.load.image('dirt', '/src/assets/wip-dirt.png');
     this.load.spritesheet('player', '/src/assets/wip-player.png', {
@@ -41,6 +45,17 @@ export class DigScene extends Phaser.Scene {
       throw new Error('Unable to create keyboard input');
     }
     this.cursors = this.input.keyboard.createCursorKeys();
+
+    // Add restart key
+    this.input.keyboard.on('keydown-R', () => {
+      this.restart();
+    });
+
+    // DEBUG: Add a key to test Game Over scene
+    this.input.keyboard.on('keydown-T', () => {
+      this.player.takeDamage(25); // Take 25 damage each time T is pressed
+      console.log(`Player health: ${this.player.getHealth()}`);
+    });
 
     // Create the tilemap
     this.map = this.make.tilemap({
@@ -217,6 +232,12 @@ export class DigScene extends Phaser.Scene {
         }
       }
     }
+
+    // Check if player is dead
+    if (this.player.getHealth() <= 0) {
+      this.triggerGameOver();
+      return;
+    }
   }
 
   /**
@@ -261,5 +282,13 @@ export class DigScene extends Phaser.Scene {
         },
       });
     }
+  }
+
+  private triggerGameOver(): void {
+    // Pause the current scene
+    this.scene.pause();
+
+    // Launch the game over scene
+    this.scene.launch('GameOverScene');
   }
 }
