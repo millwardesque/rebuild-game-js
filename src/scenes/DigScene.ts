@@ -22,6 +22,7 @@ export class DigScene extends Phaser.Scene {
   private map!: Phaser.Tilemaps.Tilemap;
   private healthBar!: HealthBar;
   private zombies: Zombie[] = [];
+  private weapon!: Phaser.GameObjects.Sprite;
 
   constructor() {
     super({ key: 'DigScene' });
@@ -38,6 +39,7 @@ export class DigScene extends Phaser.Scene {
       frameHeight: PLAYER_SPRITESHEET_HEIGHT,
     });
     this.load.image('ladder', '/src/assets/wip-ladder.png');
+    this.load.image('sword', '/src/assets/wip-sword.png');
   }
 
   create() {
@@ -89,6 +91,11 @@ export class DigScene extends Phaser.Scene {
     // Shift the player up by half its height to align with the above-ground position
     this.player.y -= (this.player.scaleY * this.player.height) / 2;
     this.physics.add.collider(this.player, groundLayer);
+
+    // Create the sword
+    this.weapon = this.add.sprite(this.player.x, this.player.y, 'sword');
+    this.weapon.setDisplaySize(16, 16);
+    this.weapon.setDepth(1);
 
     // Create zombies
     const zombie = new Zombie(
@@ -153,6 +160,9 @@ export class DigScene extends Phaser.Scene {
 
     if (isPlayerAboveGround) {
       this.cameras.main.setBackgroundColor(SKY_COLOUR_ACTIVE);
+
+      this.weapon.x = this.player.x;
+      this.weapon.y = this.player.y;
 
       if (this.cursors.space.isDown && this.player.body?.blocked.down) {
         const playerTileX = Math.floor(this.player.getCenter().x / TILE_WIDTH);

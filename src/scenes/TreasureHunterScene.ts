@@ -15,6 +15,8 @@ const TILE_HEIGHT = 32;
 const PLAYER_START_TILE_X = Math.floor(TILE_MAP_WIDTH / 2.0);
 const PLAYER_SPRITESHEET_WIDTH = 16;
 const PLAYER_SPRITESHEET_HEIGHT = 16;
+const DIRT_TILE_INDEX = 0;
+const WATER_TILE_INDEX = 2;
 
 export class TreasureHunterScene extends Phaser.Scene {
   private player!: Player;
@@ -74,9 +76,13 @@ export class TreasureHunterScene extends Phaser.Scene {
     if (!groundLayer) {
       throw new Error('Unable to create ground layer');
     }
+    groundLayer.fill(WATER_TILE_INDEX);
+    this.map.setCollision([DIRT_TILE_INDEX]);
 
-    groundLayer.fill(0);
-    this.map.setCollision([0]);
+    // Set the top row of the tilemap to dirt
+    for (let x = 0; x < TILE_MAP_WIDTH; x++) {
+      groundLayer.putTileAt(DIRT_TILE_INDEX, x, 0, true);
+    }
 
     // Create the player
     this.player = new Player(
@@ -191,8 +197,14 @@ export class TreasureHunterScene extends Phaser.Scene {
           false,
           'ground'
         );
-        if (groundTile && groundTile.index === 0) {
-          this.map.putTileAt(1, toolTileX, toolTileY, true, 'ground');
+        if (groundTile && groundTile.index === DIRT_TILE_INDEX) {
+          this.map.putTileAt(
+            WATER_TILE_INDEX,
+            toolTileX,
+            toolTileY,
+            true,
+            'ground'
+          );
 
           if (toolTileY === 0) {
             this.add.sprite(
@@ -226,8 +238,8 @@ export class TreasureHunterScene extends Phaser.Scene {
             tileBounds
           );
 
-          if (toolTile.index === 1 && !playerOverlapsTile) {
-            this.map.putTileAt(0, toolTile.x, toolTile.y, true);
+          if (toolTile.index === WATER_TILE_INDEX && !playerOverlapsTile) {
+            this.map.putTileAt(DIRT_TILE_INDEX, toolTile.x, toolTile.y, true);
           }
         }
       }

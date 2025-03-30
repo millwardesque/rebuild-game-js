@@ -2,7 +2,6 @@
 
 - Level design
 - Remove dig / fill action
-- Water tile
 - Carrying inventory value + UX
 - Treasure entity
 - Collect treasure
