@@ -16,7 +16,7 @@ const PLAYER_START_TILE_X = Math.floor(TILE_MAP_WIDTH / 2.0);
 const PLAYER_SPRITESHEET_WIDTH = 16;
 const PLAYER_SPRITESHEET_HEIGHT = 16;
 
-export class DigScene extends Phaser.Scene {
+export class TreasureHunterScene extends Phaser.Scene {
   private player!: Player;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private map!: Phaser.Tilemaps.Tilemap;
@@ -24,7 +24,7 @@ export class DigScene extends Phaser.Scene {
   private zombies: Zombie[] = [];
 
   constructor() {
-    super({ key: 'DigScene' });
+    super({ key: 'TreasureHunterScene' });
   }
 
   restart() {
@@ -139,7 +139,7 @@ export class DigScene extends Phaser.Scene {
     });
 
     this.add
-      .text(this.player.x, -48, 'Dig Scene', {
+      .text(this.player.x, -48, 'Treasure Hunter Scene', {
         color: '#ffffff',
         fontSize: '32px',
       })

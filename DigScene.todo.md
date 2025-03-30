@@ -1,8 +1,10 @@
 # Must do
 
-- Player death
-- Restart game
-- Game over screen
+- Collision boxes for player and zombies are way too big
+- Zombies can't run over ladders
+- Player can't usually go right down a ladder after digging it b/c collision issues
+- Player needs a reason not to stay below ground
+- Player needs an objective to not stay above ground for too long
 
 # Should do
 
@@ -26,3 +28,4 @@
 # From Ziya
 
 - Show weapon / tool
+-

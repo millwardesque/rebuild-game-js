@@ -1,8 +1,14 @@
 import Phaser from 'phaser';
 
 export class GameOverScene extends Phaser.Scene {
+  private sceneToLaunch: string;
+
   constructor() {
     super({ key: 'GameOverScene' });
+  }
+
+  init(data: { sceneToLaunch: string }) {
+    this.sceneToLaunch = data.sceneToLaunch;
   }
 
   create() {
@@ -53,7 +59,9 @@ export class GameOverScene extends Phaser.Scene {
     // Restart the DigScene when button is clicked
     restartButton.on('pointerdown', () => {
       this.scene.stop('GameOverScene');
-      this.scene.get('DigScene').scene.restart();
+      if (this.sceneToLaunch) {
+        this.scene.get(this.sceneToLaunch).scene.restart();
+      }
     });
   }
 }
