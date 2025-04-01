@@ -5,12 +5,15 @@
 # Should do
 
 - Keep treasure from spawning over top of other treasure
-- Zombies roam when not pursuing (but not into water)
+- Zombies roam when not pursuing
+- Zombies shouldn't walk into water
 - Show player carrying treasure
+- Treasure shouldn't spawn above water
 - Remove all the manual adjustments to make the sprite above ground level (maybe setOrigin?)
 
 # Could do
 
+- Make tiles smaller, but digging takes out 2-3 at a time?
 - Stash for depositing treasure
 - Player can dig new holes, but only one before his shovel breaks
 - Player can't dig at all
