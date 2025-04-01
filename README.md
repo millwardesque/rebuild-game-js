@@ -4,4 +4,5 @@ A game where you rebuild your life after some to-be-determined catastrophic even
 
 # Attribution
 
-- The ./src/assets/wip-player.aseprite and png files were downloaded from https://opengameart.org/content/tiny-zelder-clone-topdown-pack by Wareya
+- ./src/assets/wip-player.aseprite and png files were downloaded from https://opengameart.org/content/tiny-zelder-clone-topdown-pack by Wareya
+- ./src/assets/wip-jewel.png file was downloaded from https://opengameart.org/content/three-shiny-jewels-square-soft-diamond-hard-edge-diamond-shapes-package

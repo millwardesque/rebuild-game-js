@@ -16,7 +16,7 @@ export class TreasureTracker extends Phaser.GameObjects.Text {
     scene.add.existing(this);
   }
 
-  public addTreasure(amount: number): void {
+  public updateTreasure(amount: number): void {
     this.treasureAmount += amount;
     this.setText(getTreasureString(this.treasureAmount));
   }

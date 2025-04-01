@@ -5,6 +5,7 @@ import { Zombie } from '../entities/Zombie';
 import { HealthBar } from '../entities/HealthBar';
 import { OxygenBar } from '../entities/OxygenBar';
 import { TreasureTracker } from '../entities/TreasureTracker';
+import { Treasure } from '../entities/Treasure';
 
 const CAMERA_DEADZONE_X = 200;
 const CAMERA_DEADZONE_Y = 50;
@@ -26,7 +27,7 @@ export class TreasureHunterScene extends Phaser.Scene {
   private map!: Phaser.Tilemaps.Tilemap;
   private healthBar!: HealthBar;
   private oxygenBar!: OxygenBar;
-  private treasure!: TreasureTracker;
+  private treasureTracker!: TreasureTracker;
 
   private currentOxygen: number = 100;
   private maxOxygen: number = 100;
@@ -50,6 +51,7 @@ export class TreasureHunterScene extends Phaser.Scene {
       frameHeight: PLAYER_SPRITESHEET_HEIGHT,
     });
     this.load.image('ladder', '/src/assets/wip-ladder.png');
+    this.load.image('treasure', '/src/assets/wip-jewel.png');
   }
 
   create() {
@@ -138,6 +140,34 @@ export class TreasureHunterScene extends Phaser.Scene {
       this
     );
 
+    // Treasure
+    const treasure1 = new Treasure(
+      this,
+      (PLAYER_START_TILE_X + 18) * TILE_WIDTH,
+      ABOVE_GROUND_POSITION_Y,
+      'treasure',
+      1.0
+    );
+    treasure1.y -= (treasure1.scaleY * treasure1.height) / 2;
+
+    const treasure2 = new Treasure(
+      this,
+      (PLAYER_START_TILE_X - 18) * TILE_WIDTH,
+      ABOVE_GROUND_POSITION_Y,
+      'treasure',
+      1.0
+    );
+    treasure2.y -= (treasure2.scaleY * treasure2.height) / 2;
+
+    // Add collisions between player and treasure
+    this.physics.add.overlap(
+      this.player,
+      [treasure1, treasure2],
+      this._handlePlayerTreasureCollision,
+      undefined,
+      this
+    );
+
     // Configure the camera
     this.cameras.main.setBackgroundColor(SKY_COLOUR_MUTED);
     this.cameras.main.startFollow(this.player, true, 0.9, 0.9);
@@ -159,7 +189,10 @@ export class TreasureHunterScene extends Phaser.Scene {
     this.oxygenBar.updateOxygen(this.currentOxygen, this.maxOxygen);
 
     // Configure the treasure tracker
-    this.treasure = new TreasureTracker(this, 15, 65);
+    this.treasureTracker = new TreasureTracker(this, 15, 65);
+    this.treasureTracker.updateTreasure(0);
+
+    this.debugDrawHorizon();
 
     // Scene title
     this.add
@@ -276,6 +309,26 @@ export class TreasureHunterScene extends Phaser.Scene {
     }
   }
 
+  private _handlePlayerTreasureCollision(
+    _player:
+      | Phaser.GameObjects.GameObject
+      | Phaser.Physics.Arcade.Body
+      | Phaser.Physics.Arcade.StaticBody
+      | Phaser.Tilemaps.Tile,
+    _treasure:
+      | Phaser.GameObjects.GameObject
+      | Phaser.Physics.Arcade.Body
+      | Phaser.Physics.Arcade.StaticBody
+      | Phaser.Tilemaps.Tile
+  ): void {
+    const treasure = _treasure as unknown as Treasure;
+
+    this.treasureTracker.updateTreasure(treasure.getValue());
+
+    // Remove the treasure from the scene
+    treasure.destroy();
+  }
+
   private triggerGameOver(): void {
     // Pause the current scene
     this.scene.pause();
@@ -284,5 +337,16 @@ export class TreasureHunterScene extends Phaser.Scene {
     this.scene.launch('GameOverScene', {
       sceneToLaunch: this.scene.key,
     });
+  }
+
+  private debugDrawHorizon(): void {
+    // Draw horizontal line at y=0 (ground level)
+    const groundLine = this.add.graphics();
+    groundLine.lineStyle(1, 0xffffff, 0.8); // 2px wide white line with 80% opacity
+    groundLine.beginPath();
+    groundLine.moveTo(-10000, 0); // Start far to the left
+    groundLine.lineTo(10000, 0); // End far to the right
+    groundLine.closePath();
+    groundLine.strokePath();
   }
 }

@@ -1,8 +1,8 @@
 # Must do
 
-- Treasure entity
-- Collect treasure
+- Spawn treasure
 - Stash for depositing treasure
+- Fix bounding boxes for sprites
 
 # Should do
 
