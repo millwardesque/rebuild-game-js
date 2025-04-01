@@ -1,9 +1,10 @@
 import { ABOVE_GROUND_POSITION_Y } from '../constants';
 import { isAboveGround } from '../utils';
-import { Player } from '../entities/player';
-import { Zombie } from '../entities/zombie';
-import { HealthBar } from '../entities/healthbar';
+import { Player } from '../entities/Player';
+import { Zombie } from '../entities/Zombie';
+import { HealthBar } from '../entities/HealthBar';
 import { OxygenBar } from '../entities/OxygenBar';
+import { TreasureTracker } from '../entities/TreasureTracker';
 
 const CAMERA_DEADZONE_X = 200;
 const CAMERA_DEADZONE_Y = 50;
@@ -25,10 +26,13 @@ export class TreasureHunterScene extends Phaser.Scene {
   private map!: Phaser.Tilemaps.Tilemap;
   private healthBar!: HealthBar;
   private oxygenBar!: OxygenBar;
+  private treasure!: TreasureTracker;
+
   private currentOxygen: number = 100;
   private maxOxygen: number = 100;
   private oxygenDepletionRate: number = 10; // Units per second
   private oxygenRefillRate: number = 10; // Units per second
+
   private zombies: Zombie[] = [];
 
   constructor() {
@@ -139,20 +143,25 @@ export class TreasureHunterScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player, true, 0.9, 0.9);
     this.cameras.main.setDeadzone(CAMERA_DEADZONE_X, CAMERA_DEADZONE_Y);
 
+    // Configure the health bar
     this.healthBar = new HealthBar(this, 5, 5);
     this.healthBar.updateHealth(
       this.player.getHealth(),
       this.player.getMaxHealth()
     );
 
-    this.oxygenBar = new OxygenBar(this, 5, 30);
-    this.oxygenBar.updateOxygen(this.currentOxygen, this.maxOxygen);
-
-    // Setup player health change listener
     this.player.setHealthChangeListener((health, maxHealth) => {
       this.healthBar.updateHealth(health, maxHealth);
     });
 
+    // Configure the oxygen bar
+    this.oxygenBar = new OxygenBar(this, 5, 30);
+    this.oxygenBar.updateOxygen(this.currentOxygen, this.maxOxygen);
+
+    // Configure the treasure tracker
+    this.treasure = new TreasureTracker(this, 15, 65);
+
+    // Scene title
     this.add
       .text(this.player.x, -48, 'Treasure Hunter Scene', {
         color: '#ffffff',

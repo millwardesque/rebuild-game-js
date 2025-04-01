@@ -1,6 +1,5 @@
 # Must do
 
-- Carrying inventory value + UX
 - Treasure entity
 - Collect treasure
 - Stash for depositing treasure
@@ -9,12 +8,12 @@
 
 - Player shouldn't deplete oxygen on top level
 - Zombies roam (but not into water)
+- Player carrying treasure
 
 # Could do
 
 - Player can dig new holes, but only one before his shovel breaks
-- Show treasure sack
-- Player can carry one helpful item
+- Player can carry one helpful auxiliary item
 - More treasure = Slower movement
 
 # Polish

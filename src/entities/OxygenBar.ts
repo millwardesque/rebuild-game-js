@@ -2,9 +2,9 @@ import { StatusBar, StatusBarConfig } from './StatusBar';
 import Phaser from 'phaser';
 
 // Define constants specific to the Oxygen Bar
-const OXYGEN_BAR_WIDTH = 150; // Maybe make it slightly smaller or different than health
-const OXYGEN_BAR_HEIGHT = 15;
-const OXYGEN_BAR_PADDING = 5;
+const OXYGEN_BAR_WIDTH = 200;
+const OXYGEN_BAR_HEIGHT = 20;
+const OXYGEN_BAR_PADDING = 10;
 const OXYGEN_BAR_BACKGROUND_COLOR = 0x000000;
 const OXYGEN_BAR_FILL_COLOR = 0x0000ff; // Blue for oxygen
 const OXYGEN_BAR_BORDER_COLOR = 0xffffff;
