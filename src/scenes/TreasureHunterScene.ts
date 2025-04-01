@@ -94,8 +94,15 @@ export class TreasureHunterScene extends Phaser.Scene {
     this.map.setCollision([DIRT_TILE_INDEX]);
 
     // Set the top row of the tilemap to dirt
-    for (let x = 0; x < TILE_MAP_WIDTH; x++) {
-      groundLayer.putTileAt(DIRT_TILE_INDEX, x, 0, true);
+    for (
+      let x = Math.floor(TILE_MAP_WIDTH / 3);
+      x < TILE_MAP_WIDTH - Math.floor(TILE_MAP_WIDTH / 3) - 1;
+      x++
+    ) {
+      if (x % 12 !== 1 && x % 12 !== 0) {
+        groundLayer.putTileAt(DIRT_TILE_INDEX, x, 0, true);
+        groundLayer.putTileAt(DIRT_TILE_INDEX, x, 1, true);
+      }
     }
 
     // Create the player

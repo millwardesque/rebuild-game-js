@@ -1,10 +1,10 @@
 # Must do
 
-- Stash for depositing treasure
 - Fix bounding boxes for sprites
 
 # Should do
 
+- Stash for depositing treasure
 - Player shouldn't deplete oxygen on top level
 - Keep treasure from spawning over top of other treasure
 - Zombies roam (but not into water)
@@ -16,6 +16,7 @@
 - Player can dig new holes, but only one before his shovel breaks
 - Player can carry one helpful auxiliary item
 - More treasure = Slower movement
+- Don't render treasure when player is underground
 
 # Polish
 
@@ -23,9 +24,6 @@
 - Unpassable player boundaries at edges of tilemap
 - Camera bounds on edges of tilemap
 
-# Triage
-
 # From Ziya
 
 - Show weapon / tool
--
