@@ -135,14 +135,14 @@ export class DigScene extends Phaser.Scene {
     this.cameras.main.setDeadzone(CAMERA_DEADZONE_X, CAMERA_DEADZONE_Y);
 
     this.healthBar = new HealthBar(this, 5, 5);
-    this.healthBar.updateHealthBar(
+    this.healthBar.updateHealth(
       this.player.getHealth(),
       this.player.getMaxHealth()
     );
 
     // Setup player health change listener
     this.player.setHealthChangeListener((health, maxHealth) => {
-      this.healthBar.updateHealthBar(health, maxHealth);
+      this.healthBar.updateHealth(health, maxHealth);
     });
 
     this.add
@@ -291,6 +291,11 @@ export class DigScene extends Phaser.Scene {
           player.clearTint();
         },
       });
+
+      this.healthBar.updateHealth(
+        this.player.getHealth(),
+        this.player.getMaxHealth()
+      );
     }
   }
 

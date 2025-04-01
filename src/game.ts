@@ -5,8 +5,8 @@ import { TreasureHunterScene } from './scenes/TreasureHunterScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
-  width: 800,
-  height: 600,
+  width: 1024,
+  height: 768,
   parent: 'game',
   backgroundColor: '#000000',
   pixelArt: true,

@@ -3,6 +3,7 @@ import { isAboveGround } from '../utils';
 import { Player } from '../entities/player';
 import { Zombie } from '../entities/zombie';
 import { HealthBar } from '../entities/healthbar';
+import { OxygenBar } from '../entities/OxygenBar';
 
 const CAMERA_DEADZONE_X = 200;
 const CAMERA_DEADZONE_Y = 50;
@@ -23,6 +24,11 @@ export class TreasureHunterScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private map!: Phaser.Tilemaps.Tilemap;
   private healthBar!: HealthBar;
+  private oxygenBar!: OxygenBar;
+  private currentOxygen: number = 100;
+  private maxOxygen: number = 100;
+  private oxygenDepletionRate: number = 10; // Units per second
+  private oxygenRefillRate: number = 10; // Units per second
   private zombies: Zombie[] = [];
 
   constructor() {
@@ -99,7 +105,7 @@ export class TreasureHunterScene extends Phaser.Scene {
     // Create zombies
     const zombie = new Zombie(
       this,
-      (PLAYER_START_TILE_X - 20) * TILE_WIDTH,
+      (PLAYER_START_TILE_X - 15) * TILE_WIDTH,
       ABOVE_GROUND_POSITION_Y,
       'player',
       this.player
@@ -110,7 +116,7 @@ export class TreasureHunterScene extends Phaser.Scene {
 
     const zombie2 = new Zombie(
       this,
-      (PLAYER_START_TILE_X + 20) * TILE_WIDTH,
+      (PLAYER_START_TILE_X + 15) * TILE_WIDTH,
       ABOVE_GROUND_POSITION_Y,
       'player',
       this.player
@@ -134,14 +140,17 @@ export class TreasureHunterScene extends Phaser.Scene {
     this.cameras.main.setDeadzone(CAMERA_DEADZONE_X, CAMERA_DEADZONE_Y);
 
     this.healthBar = new HealthBar(this, 5, 5);
-    this.healthBar.updateHealthBar(
+    this.healthBar.updateHealth(
       this.player.getHealth(),
       this.player.getMaxHealth()
     );
 
+    this.oxygenBar = new OxygenBar(this, 5, 30);
+    this.oxygenBar.updateOxygen(this.currentOxygen, this.maxOxygen);
+
     // Setup player health change listener
     this.player.setHealthChangeListener((health, maxHealth) => {
-      this.healthBar.updateHealthBar(health, maxHealth);
+      this.healthBar.updateHealth(health, maxHealth);
     });
 
     this.add
@@ -154,10 +163,16 @@ export class TreasureHunterScene extends Phaser.Scene {
 
   update() {
     const isPlayerAboveGround = isAboveGround(this.player);
+    const deltaTime = this.game.loop.delta / 1000; // Convert to seconds
 
     this.player.update();
 
     if (isPlayerAboveGround) {
+      // Refill oxygen when above ground
+      this.currentOxygen = Math.min(
+        this.maxOxygen,
+        this.currentOxygen + this.oxygenRefillRate * deltaTime
+      );
       this.cameras.main.setBackgroundColor(SKY_COLOUR_ACTIVE);
 
       if (this.cursors.space.isDown && this.player.body?.blocked.down) {
@@ -179,71 +194,22 @@ export class TreasureHunterScene extends Phaser.Scene {
         }
       }
     } else {
+      // Deplete oxygen when below ground
+      this.currentOxygen = Math.max(
+        0,
+        this.currentOxygen - this.oxygenDepletionRate * deltaTime
+      );
+
+      // If oxygen is depleted, player takes damage
+      if (this.currentOxygen <= 0) {
+        this.player.takeDamage(1); // Damage per frame when out of oxygen
+      }
+
       this.cameras.main.setBackgroundColor(SKY_COLOUR_MUTED);
-
-      // Player action
-      if (Phaser.Input.Keyboard.JustDown(this.cursors.space)) {
-        // Can we replace this with this.map.getTileAtWorldXY?
-        const toolTileX = Math.floor(
-          this.player.getToolPosition().x / TILE_WIDTH
-        );
-        const toolTileY = Math.floor(
-          this.player.getToolPosition().y / TILE_HEIGHT
-        );
-
-        const groundTile = this.map.getTileAt(
-          toolTileX,
-          toolTileY,
-          false,
-          'ground'
-        );
-        if (groundTile && groundTile.index === DIRT_TILE_INDEX) {
-          this.map.putTileAt(
-            WATER_TILE_INDEX,
-            toolTileX,
-            toolTileY,
-            true,
-            'ground'
-          );
-
-          if (toolTileY === 0) {
-            this.add.sprite(
-              toolTileX * TILE_WIDTH + TILE_WIDTH / 2,
-              toolTileY * TILE_HEIGHT + TILE_HEIGHT / 2,
-              'ladder'
-            );
-          }
-        }
-      }
-
-      if (Phaser.Input.Keyboard.JustDown(this.cursors.shift)) {
-        const toolTile = this.map.getTileAtWorldXY(
-          this.player.getToolPosition().x,
-          this.player.getToolPosition().y,
-          undefined,
-          undefined,
-          'ground'
-        );
-
-        if (toolTile) {
-          const playerBounds = this.player.getBounds();
-          const tileBounds = new Phaser.Geom.Rectangle(
-            toolTile.getLeft(),
-            toolTile.getTop(),
-            toolTile.width,
-            toolTile.height
-          );
-          const playerOverlapsTile = Phaser.Geom.Rectangle.Overlaps(
-            playerBounds,
-            tileBounds
-          );
-
-          if (toolTile.index === WATER_TILE_INDEX && !playerOverlapsTile) {
-            this.map.putTileAt(DIRT_TILE_INDEX, toolTile.x, toolTile.y, true);
-          }
-        }
-      }
     }
+
+    // Update oxygen bar
+    this.oxygenBar.updateOxygen(this.currentOxygen, this.maxOxygen);
 
     // Check if player is dead
     if (this.player.getHealth() <= 0) {
@@ -293,6 +259,11 @@ export class TreasureHunterScene extends Phaser.Scene {
           player.clearTint();
         },
       });
+
+      this.healthBar?.updateHealth(
+        this.player.getHealth(),
+        this.player.getMaxHealth()
+      );
     }
   }
 
