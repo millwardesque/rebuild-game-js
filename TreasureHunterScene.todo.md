@@ -1,14 +1,15 @@
 # Must do
 
-- Spawn treasure
 - Stash for depositing treasure
 - Fix bounding boxes for sprites
 
 # Should do
 
 - Player shouldn't deplete oxygen on top level
+- Keep treasure from spawning over top of other treasure
 - Zombies roam (but not into water)
 - Player carrying treasure
+- Remove all the manual adjustments to make the sprite above ground level (maybe setOrigin?)
 
 # Could do
 

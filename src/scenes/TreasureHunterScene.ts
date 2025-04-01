@@ -4,8 +4,9 @@ import { Player } from '../entities/Player';
 import { Zombie } from '../entities/Zombie';
 import { HealthBar } from '../entities/HealthBar';
 import { OxygenBar } from '../entities/OxygenBar';
-import { TreasureTracker } from '../entities/TreasureTracker';
 import { Treasure } from '../entities/Treasure';
+import { TreasureSpawner } from '../entities/TreasureSpawner';
+import { TreasureTracker } from '../entities/TreasureTracker';
 
 const CAMERA_DEADZONE_X = 200;
 const CAMERA_DEADZONE_Y = 50;
@@ -27,6 +28,7 @@ export class TreasureHunterScene extends Phaser.Scene {
   private map!: Phaser.Tilemaps.Tilemap;
   private healthBar!: HealthBar;
   private oxygenBar!: OxygenBar;
+  private treasureSpawner!: TreasureSpawner;
   private treasureTracker!: TreasureTracker;
 
   private currentOxygen: number = 100;
@@ -141,28 +143,24 @@ export class TreasureHunterScene extends Phaser.Scene {
     );
 
     // Treasure
-    const treasure1 = new Treasure(
+    this.treasureSpawner = new TreasureSpawner(
       this,
-      (PLAYER_START_TILE_X + 18) * TILE_WIDTH,
-      ABOVE_GROUND_POSITION_Y,
-      'treasure',
-      1.0
+      2000,
+      10,
+      new Phaser.Geom.Rectangle(
+        this.player.x - TILE_WIDTH * 32,
+        ABOVE_GROUND_POSITION_Y - 1,
+        TILE_WIDTH * 64,
+        1
+      ),
+      1.0,
+      'treasure'
     );
-    treasure1.y -= (treasure1.scaleY * treasure1.height) / 2;
-
-    const treasure2 = new Treasure(
-      this,
-      (PLAYER_START_TILE_X - 18) * TILE_WIDTH,
-      ABOVE_GROUND_POSITION_Y,
-      'treasure',
-      1.0
-    );
-    treasure2.y -= (treasure2.scaleY * treasure2.height) / 2;
 
     // Add collisions between player and treasure
     this.physics.add.overlap(
       this.player,
-      [treasure1, treasure2],
+      this.treasureSpawner.getTreasuresGroup(),
       this._handlePlayerTreasureCollision,
       undefined,
       this

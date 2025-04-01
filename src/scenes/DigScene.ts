@@ -1,7 +1,7 @@
 import { ABOVE_GROUND_POSITION_Y } from '../constants';
 import { isAboveGround } from '../utils';
 import { Player } from '../entities/Player';
-import { Zombie } from '../entities/Zombie';
+import { Zombie } from '../entities/zombie';
 import { HealthBar } from '../entities/HealthBar';
 
 const CAMERA_DEADZONE_X = 200;

@@ -124,6 +124,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     this.updateToolPosition();
+
+    // @DEBUG console.log('[CPM] Player preUpdate', this.x, this.y); // @DEBUG
   }
 
   /**
