@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
-import { isAboveGround } from '../utils';
-import { ABOVE_GROUND_GRAVITY } from '../constants';
+import { isAboveGround, isPositionAboveGround } from '../utils';
+import { ABOVE_GROUND_GRAVITY, IN_WATER_GRAVITY } from '../constants';
 
 const MONSTER_SPEED = 150;
 const MONSTER_DEPTH = 1;
-const MONSTER_SCALE = 3.0; // Scale of player sprite. Ideally this should be 1.0, but since I'm not yet making custom pixel art, this lets us fudge it.
+const MONSTER_SCALE = 3.0; // Scale of the sprite. Ideally this should be 1.0, but since I'm not yet making custom pixel art, this lets us fudge it.
 const CHASE_THRESHOLD = 200.0; // Distance in pixels within which the zombie will chase the target
 
 export class Zombie extends Phaser.Physics.Arcade.Sprite {
@@ -13,6 +13,8 @@ export class Zombie extends Phaser.Physics.Arcade.Sprite {
   private rightWalkKey: string;
   private upWalkKey: string;
   private downWalkKey: string;
+
+  private motivation: 'chase' | 'roam';
 
   private target: Phaser.Physics.Arcade.Sprite | undefined;
 
@@ -30,6 +32,7 @@ export class Zombie extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
+    this.motivation = 'roam';
     this.target = target;
 
     this.spriteKey = sprite;
@@ -46,7 +49,7 @@ export class Zombie extends Phaser.Physics.Arcade.Sprite {
   }
 
   /**
-   * Creates the player animations
+   * Creates the animations
    */
   private createAnimations(): void {
     if (!this.scene.anims.exists(this.downWalkKey)) {
@@ -95,13 +98,13 @@ export class Zombie extends Phaser.Physics.Arcade.Sprite {
   }
 
   /**
-   * Handles pre-update logic for the player
+   * Handles pre-update logic
    * @param time The current time in milliseconds
    * @param delta The delta time in milliseconds
    */
   preUpdate(time: number, delta: number): void {
     super.preUpdate(time, delta);
-    if (isAboveGround(this)) {
+    if (isPositionAboveGround(this.getBottomCenter())) {
       this.aboveGroundPreUpdate();
     } else {
       this.belowGroundPreUpdate();
@@ -109,37 +112,65 @@ export class Zombie extends Phaser.Physics.Arcade.Sprite {
   }
 
   /**
-   * Handles pre-update logic when the player is above-ground
+   * Handles pre-update logic when above ground
    */
   aboveGroundPreUpdate(): void {
     this.setGravityY(ABOVE_GROUND_GRAVITY);
     this.setVelocity(0);
 
-    const targetX = this.target?.x;
-    const isTargetAboveGround = this.target && isAboveGround(this.target);
-
-    if (targetX && isTargetAboveGround) {
-      if (targetX < this.x && Math.abs(this.x - targetX) < CHASE_THRESHOLD) {
-        this.setVelocityX(-MONSTER_SPEED);
-        this.play(this.leftWalkKey, true);
-      } else if (
-        targetX > this.x &&
-        Math.abs(targetX - this.x) < CHASE_THRESHOLD
-      ) {
-        this.setVelocityX(MONSTER_SPEED);
-        this.play(this.rightWalkKey, true);
-      } else {
-        this.stopAfterRepeat(0);
-      }
-    } else {
-      this.stopAfterRepeat(0);
+    switch (this.motivation) {
+      case 'roam':
+        this.onPreUpdateRoam();
+        break;
+      case 'chase':
+        this.onPreUpdateChase();
+        break;
     }
   }
 
   /**
-   * Handles pre-update logic when the player is below-ground
+   * Handles pre-update logic when below-ground
    */
   belowGroundPreUpdate(): void {
-    this.setGravityY(0);
+    this.setGravityY(IN_WATER_GRAVITY);
+  }
+
+  onPreUpdateRoam(): void {
+    const targetX = this.target?.x;
+    const isTargetAboveGround = this.target && isAboveGround(this.target);
+
+    if (
+      targetX &&
+      isTargetAboveGround &&
+      Math.abs(this.x - targetX) <= CHASE_THRESHOLD
+    ) {
+      this.motivation = 'chase';
+      return;
+    }
+
+    this.setVelocity(0);
+    this.stopAfterRepeat(0);
+  }
+
+  onPreUpdateChase(): void {
+    const targetX = this.target?.x;
+    const isTargetAboveGround = this.target && isAboveGround(this.target);
+
+    if (
+      !isTargetAboveGround ||
+      !targetX ||
+      Math.abs(this.x - targetX) > CHASE_THRESHOLD
+    ) {
+      this.motivation = 'roam';
+      return;
+    }
+
+    if (targetX < this.x) {
+      this.setVelocityX(-MONSTER_SPEED);
+      this.play(this.leftWalkKey, true);
+    } else if (targetX > this.x) {
+      this.setVelocityX(MONSTER_SPEED);
+      this.play(this.rightWalkKey, true);
+    }
   }
 }
