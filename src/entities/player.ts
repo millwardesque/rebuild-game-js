@@ -7,7 +7,7 @@ const PLAYER_JUMP_VELOCITY = -200;
 const PLAYER_SPEED = 200;
 const PLAYER_TOOL_OFFSET = 24;
 const PLAYER_DEPTH = 1;
-const PLAYER_SCALE = 1.5; // Scale of player sprite. Ideally this should be 1.0, but since I'm not yet making custom pixel art, this lets us fudge it.
+const PLAYER_SCALE = 2; // Scale of player sprite. Ideally this should be 1.0, but since I'm not yet making custom pixel art, this lets us fudge it.
 const PLAYER_MAX_HEALTH = 100;
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
@@ -124,8 +124,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     this.updateToolPosition();
-
-    // @DEBUG console.log('[CPM] Player preUpdate', this.x, this.y); // @DEBUG
   }
 
   /**
