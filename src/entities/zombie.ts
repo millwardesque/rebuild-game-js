@@ -5,6 +5,7 @@ import { ABOVE_GROUND_GRAVITY, IN_WATER_GRAVITY } from '../constants';
 const MONSTER_SPEED = 150;
 const MONSTER_DEPTH = 1;
 const MONSTER_SCALE = 3.0; // Scale of the sprite. Ideally this should be 1.0, but since I'm not yet making custom pixel art, this lets us fudge it.
+export const MONSTER_TINT = 0x00ff33; // Tint of the monster sprite
 const CHASE_THRESHOLD = 200.0; // Distance in pixels within which the zombie will chase the target
 
 export class Zombie extends Phaser.Physics.Arcade.Sprite {
@@ -27,7 +28,7 @@ export class Zombie extends Phaser.Physics.Arcade.Sprite {
   ) {
     super(scene, x, y, sprite);
     this.setScale(MONSTER_SCALE);
-    this.setTint(0x00ff33);
+    this.setTint(MONSTER_TINT);
 
     scene.add.existing(this);
     scene.physics.add.existing(this);

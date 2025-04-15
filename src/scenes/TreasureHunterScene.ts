@@ -1,12 +1,13 @@
 import { ABOVE_GROUND_POSITION_Y } from '../constants';
 import { isAboveGround } from '../utils';
 import { Player } from '../entities/Player';
-import { Zombie } from '../entities/Zombie';
+import { MONSTER_TINT, Zombie } from '../entities/zombie';
 import { HealthBar } from '../entities/HealthBar';
 import { OxygenBar } from '../entities/OxygenBar';
 import { Treasure } from '../entities/Treasure';
 import { TreasureSpawner } from '../entities/TreasureSpawner';
 import { TreasureTracker } from '../entities/TreasureTracker';
+import { Rock } from '../entities/Rock';
 
 const CAMERA_DEADZONE_X = 200;
 const CAMERA_DEADZONE_Y = 50;
@@ -37,6 +38,8 @@ export class TreasureHunterScene extends Phaser.Scene {
   private oxygenRefillRate: number = 10; // Units per second
 
   private zombies: Zombie[] = [];
+  private rocks: Rock[] = [];
+  private rockThrowCooldown: number = 0;
 
   constructor() {
     super({ key: 'TreasureHunterScene' });
@@ -54,6 +57,7 @@ export class TreasureHunterScene extends Phaser.Scene {
     });
     this.load.image('ladder', '/src/assets/wip-ladder.png');
     this.load.image('treasure', '/src/assets/wip-jewel.png');
+    this.load.image('rock', '/src/assets/wip-rock.png');
   }
 
   create() {
@@ -222,24 +226,26 @@ export class TreasureHunterScene extends Phaser.Scene {
       );
       this.cameras.main.setBackgroundColor(SKY_COLOUR_ACTIVE);
 
-      if (this.cursors.space.isDown && this.player.body?.blocked.down) {
-        const playerTileX = Math.floor(this.player.getCenter().x / TILE_WIDTH);
-        const playerTileY = 0; // TODO This is a lazy assumption the 0th tile row is always at the above-ground level, but it'll work for now
-        const groundTile = this.map.getTileAt(
-          playerTileX,
-          playerTileY,
-          false,
-          'ground'
-        );
-        if (groundTile && groundTile.index === 0) {
-          this.map.putTileAt(1, playerTileX, playerTileY, true, 'ground');
-          this.add.sprite(
-            playerTileX * TILE_WIDTH + TILE_WIDTH / 2,
-            playerTileY * TILE_HEIGHT + TILE_HEIGHT / 2,
-            'ladder'
-          );
-        }
+      // Rock throwing mechanics
+      if (this.cursors.space.isDown && this.rockThrowCooldown <= 0) {
+        this.throwRock();
+        // Add cooldown to prevent spam throwing
+        this.rockThrowCooldown = 500; // 500ms cooldown
       }
+
+      // Update rock throw cooldown
+      if (this.rockThrowCooldown > 0) {
+        this.rockThrowCooldown -= this.sys.game.loop.delta;
+      }
+
+      // Process rock collisions with zombies
+      this.physics.overlap(
+        this.rocks,
+        this.zombies,
+        this.handleRockZombieCollision,
+        undefined,
+        this
+      );
     } else {
       // Deplete oxygen when below ground
       this.currentOxygen = Math.max(
@@ -342,6 +348,101 @@ export class TreasureHunterScene extends Phaser.Scene {
     this.scene.launch('GameOverScene', {
       sceneToLaunch: this.scene.key,
     });
+  }
+
+  /**
+   * Handles collision between rocks and zombies
+   */
+  private handleRockZombieCollision(
+    _rock:
+      | Phaser.GameObjects.GameObject
+      | Phaser.Physics.Arcade.Body
+      | Phaser.Physics.Arcade.StaticBody
+      | Phaser.Tilemaps.Tile,
+    _zombie:
+      | Phaser.GameObjects.GameObject
+      | Phaser.Physics.Arcade.Body
+      | Phaser.Physics.Arcade.StaticBody
+      | Phaser.Tilemaps.Tile
+  ): void {
+    const rock = _rock as Rock;
+    const zombie = _zombie as Zombie;
+
+    // Apply damage to zombie
+    // For now zombies don't have health, so we'll just make them flash red
+    this.tweens.add({
+      targets: zombie,
+      tint: 0xff0000,
+      duration: 100,
+      yoyo: true,
+      onComplete: () => {
+        zombie.setTint(MONSTER_TINT);
+      },
+    });
+
+    // Destroy the rock
+    rock.destroy();
+
+    // Remove from our tracking array
+    this.rocks = this.rocks.filter((r) => r !== rock);
+  }
+
+  /**
+   * Creates and throws a rock in the direction the player is facing
+   */
+  private throwRock(): void {
+    // Get player position and facing direction
+    const playerCenter = this.player.getCenter();
+
+    // Determine throw direction based on player facing
+    let dirX = 0;
+    let dirY = 0;
+
+    // This is a simple implementation - you might want to enhance it to use the actual facing angle
+    if (this.player.anims.currentAnim) {
+      const anim = this.player.anims.currentAnim.key;
+      if (anim.includes('left')) {
+        dirX = -1;
+      } else if (anim.includes('right')) {
+        dirX = 1;
+      } else if (anim.includes('up')) {
+        dirY = -1;
+      } else if (anim.includes('down')) {
+        dirY = 1;
+      } else {
+        // Default to right if no animation is playing
+        dirX = 1;
+      }
+    } else {
+      // Default to right if no animation is playing
+      dirX = 1;
+    }
+
+    // If no direction determined (player is idle), use a default
+    if (dirX === 0 && dirY === 0) {
+      dirX = 1; // Default throw to the right
+    }
+
+    // Create the rock
+    const rock = new Rock(this, playerCenter.x, playerCenter.y, dirX, dirY);
+
+    // Add to our tracking array
+    this.rocks.push(rock);
+
+    // Add collisions with the ground layer
+    const groundLayer = this.map.getLayer('ground');
+    if (groundLayer && groundLayer.tilemapLayer) {
+      this.physics.add.collider(
+        rock,
+        groundLayer.tilemapLayer,
+        (rock) => {
+          (rock as Rock).destroy();
+          this.rocks = this.rocks.filter((r) => r !== rock);
+        },
+        undefined,
+        this
+      );
+    }
   }
 
   private debugDrawHorizon(): void {

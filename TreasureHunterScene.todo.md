@@ -1,9 +1,8 @@
 # Must do
 
-- Fix bounding boxes for sprites
-
 # Should do
 
+- Fix bounding boxes for sprites
 - Keep treasure from spawning over top of other treasure
 - Zombies roam when not pursuing
 - Zombies shouldn't walk into water
@@ -36,5 +35,3 @@
 - Camera bounds on edges of tilemap
 
 # From Ziya
-
-- Show weapon / tool
