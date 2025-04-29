@@ -1,5 +1,4 @@
 import { ABOVE_GROUND_POSITION_Y } from '../constants';
-import { isAboveGround } from '../utils';
 import { Player } from '../entities/Player';
 import { HealthBar } from '../entities/HealthBar';
 import { OxygenBar } from '../entities/OxygenBar';
@@ -11,8 +10,8 @@ const CAMERA_DEADZONE_X = 200;
 const CAMERA_DEADZONE_Y = 50;
 const SKY_COLOUR_ACTIVE = '#87CEEB';
 const SKY_COLOUR_MUTED = '#4A4A4A';
-const TILE_MAP_WIDTH = 32;
-const TILE_MAP_HEIGHT = 12;
+const TILE_MAP_WIDTH = 40;
+const TILE_MAP_HEIGHT = 16;
 const TILE_WIDTH = 32;
 const TILE_HEIGHT = 32;
 const PLAYER_START_TILE_X = Math.floor(TILE_MAP_WIDTH / 2.0);
@@ -42,6 +41,8 @@ export class DiverScene extends Phaser.Scene {
 
   restart() {
     this.scene.restart();
+
+    this.currentOxygen = 100;
   }
 
   preload() {
@@ -129,6 +130,12 @@ export class DiverScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(SKY_COLOUR_MUTED);
     this.cameras.main.startFollow(this.player, true, 0.9, 0.9);
     this.cameras.main.setDeadzone(CAMERA_DEADZONE_X, CAMERA_DEADZONE_Y);
+    this.cameras.main.setBounds(
+      0,
+      -(TILE_HEIGHT * TILE_MAP_HEIGHT),
+      TILE_WIDTH * TILE_MAP_WIDTH,
+      TILE_HEIGHT * TILE_MAP_HEIGHT * 2
+    );
 
     // Configure the health bar
     this.healthBar = new HealthBar(this, 5, 5);
