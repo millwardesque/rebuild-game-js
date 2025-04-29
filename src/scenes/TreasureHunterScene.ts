@@ -40,6 +40,7 @@ export class TreasureHunterScene extends Phaser.Scene {
   private zombies: Zombie[] = [];
   private rocks: Rock[] = [];
   private rockThrowCooldown: number = 0;
+  private rockDamage: number = 10; // Damage dealt by each rock
 
   constructor() {
     super({ key: 'TreasureHunterScene' });
@@ -131,6 +132,7 @@ export class TreasureHunterScene extends Phaser.Scene {
     );
     zombie.y -= (zombie.scaleY * zombie.height) / 2;
     this.physics.add.collider(zombie, groundLayer);
+    this.setupZombie(zombie);
     this.zombies.push(zombie);
 
     const zombie2 = new Zombie(
@@ -142,6 +144,7 @@ export class TreasureHunterScene extends Phaser.Scene {
     );
     zombie2.y -= (zombie2.scaleY * zombie2.height) / 2;
     this.physics.add.collider(zombie2, groundLayer);
+    this.setupZombie(zombie2);
     this.zombies.push(zombie2);
 
     // Add collisions between player and zombies
@@ -369,22 +372,23 @@ export class TreasureHunterScene extends Phaser.Scene {
     const zombie = _zombie as Zombie;
 
     // Apply damage to zombie
-    // For now zombies don't have health, so we'll just make them flash red
-    this.tweens.add({
-      targets: zombie,
-      tint: 0xff0000,
-      duration: 100,
-      yoyo: true,
-      onComplete: () => {
-        zombie.setTint(MONSTER_TINT);
-      },
-    });
+    zombie.takeDamage(this.rockDamage);
 
     // Destroy the rock
     rock.destroy();
 
     // Remove from our tracking array
     this.rocks = this.rocks.filter((r) => r !== rock);
+  }
+  
+  /**
+   * Sets up zombie callbacks and event listeners
+   */
+  private setupZombie(zombie: Zombie): void {
+    // Set death callback to remove zombie from tracking array
+    zombie.setDeathListener(() => {
+      this.zombies = this.zombies.filter(z => z !== zombie);
+    });
   }
 
   /**
