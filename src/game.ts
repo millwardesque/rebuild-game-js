@@ -1,5 +1,6 @@
 import 'phaser';
 import { DigScene } from './scenes/DigScene';
+import { DiverScene } from './scenes/DiverScene';
 import { GameOverScene } from './scenes/GameOverScene';
 import { TreasureHunterScene } from './scenes/TreasureHunterScene';
 
@@ -10,7 +11,7 @@ const config: Phaser.Types.Core.GameConfig = {
   parent: 'game',
   backgroundColor: '#000000',
   pixelArt: true,
-  scene: [TreasureHunterScene, DigScene, GameOverScene],
+  scene: [DiverScene, TreasureHunterScene, DigScene, GameOverScene],
   physics: {
     default: 'arcade',
     arcade: {

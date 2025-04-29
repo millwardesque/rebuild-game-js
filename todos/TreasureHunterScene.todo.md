@@ -21,12 +21,6 @@
 - Don't render treasure when player is underground
 - Treasure can only spawn on the other side of a zombie
 - Player has to steal the treasure from zombies
-- Treasure spawns underwater (e.g. on a shipwreck), maybe player's stash and cozy sim is on a boat
-  - Top-down view as player sails on map to find supplies / treasure in different spots
-  - Side view for diving
-  - Side view for on-land adventuring
-  - Other sailors can join player's ship
-  - Player can upgrade ship
 
 # Polish
 
