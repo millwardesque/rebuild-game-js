@@ -267,4 +267,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   heal(amount: number): void {
     this.changeHealth(Math.min(this.maxHealth, this.currentHealth + amount));
   }
+
+  /**
+   * Gets the head position of the player
+   * @returns A point representing the head position of the player
+   */
+  getHeadPosition(): Phaser.Types.Math.Vector2Like {
+    const localX = this.x;
+    const localY = this.y - this.height / 2;
+    return this.getWorldTransformMatrix().transformPoint(localX, localY);
+  }
 }

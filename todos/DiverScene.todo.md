@@ -1,6 +1,5 @@
 # Must do
 
-- Reset scene contents
 - Draw raft w/ dirt on surface
 - Sea floor
 - Spawn treasure underwater
@@ -8,6 +7,8 @@
 - Returning to boat on surface adds to player total
 - Hazards in water
 - Treasure is only spawned at level start
+- Camera doesn't go below seafloor
+- Camera doesn't go beyond horizontal edge
 
 # Should do
 
